@@ -64,11 +64,11 @@
     <!-- Main container -->
     <Grid x:Name="RootGrid">
         <Border x:Name="MainBorder"
-                Background="#F01C1C1E"
-                CornerRadius="0,0,12,12"
+                Background="#EE1C1C1E"
+                CornerRadius="0,0,16,16"
                 ClipToBounds="True">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.5" Color="Black"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="10" Opacity="0.6" Color="Black"/>
             </Border.Effect>
 
             <Grid>
@@ -94,15 +94,15 @@
                     <!-- Reading guide line (at vertical center) -->
                     <Border x:Name="ReadingGuide"
                             VerticalAlignment="Center"
-                            Height="2"
+                            Height="3"
                             HorizontalAlignment="Stretch"
                             IsHitTestVisible="False"
-                            Opacity="0.3">
+                            Opacity="0.8">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                 <GradientStop Color="Transparent" Offset="0"/>
-                                <GradientStop Color="#30D158" Offset="0.2"/>
-                                <GradientStop Color="#30D158" Offset="0.8"/>
+                                <GradientStop Color="#5530D158" Offset="0.1"/>
+                                <GradientStop Color="#5530D158" Offset="0.9"/>
                                 <GradientStop Color="Transparent" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
@@ -121,20 +121,19 @@
 
                             <!-- Script text -->
                             <TextBlock x:Name="ScriptText"
-                                       FontSize="48"
-                                       LineHeight="64"
+                                       FontSize="56"
+                                       LineHeight="72"
+                                       FontWeight="Medium"
                                        TextAlignment="Center"
                                        TextWrapping="Wrap"
                                        Foreground="White"
-                                       Padding="24,0"
-                                       FontFamily="Segoe UI"/>
+                                       Padding="40,0"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI, -apple-system"/>
 
                             <!-- End of text indicator -->
                             <StackPanel x:Name="EndIndicator" Margin="0,40,0,60" Opacity="0.5">
-                                <Rectangle Width="60" Height="1" Fill="#666" Margin="0,0,0,10"
-                                           HorizontalAlignment="Center" RadiusX="0.5" RadiusY="0.5"/>
-                                <TextBlock Text="✓ End of script" FontSize="14" Foreground="#666"
-                                           TextAlignment="Center" FontStyle="Italic"/>
+                                <Rectangle Width="40" Height="2" Fill="#555" Margin="0,0,0,12"
+                                           HorizontalAlignment="Center" RadiusX="1" RadiusY="1"/>
                             </StackPanel>
 
                             <!-- Bottom padding -->
@@ -143,58 +142,58 @@
                     </ScrollViewer>
 
                     <!-- Fade overlays -->
-                    <Border VerticalAlignment="Top" Height="40" IsHitTestVisible="False">
+                    <Border VerticalAlignment="Top" Height="60" IsHitTestVisible="False">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#F01C1C1E" Offset="0"/>
+                                <GradientStop Color="#EE1C1C1E" Offset="0"/>
                                 <GradientStop Color="#001C1C1E" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
-                    <Border VerticalAlignment="Bottom" Height="40" IsHitTestVisible="False">
+                    <Border VerticalAlignment="Bottom" Height="60" IsHitTestVisible="False">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                 <GradientStop Color="#001C1C1E" Offset="0"/>
-                                <GradientStop Color="#F01C1C1E" Offset="1"/>
+                                <GradientStop Color="#EE1C1C1E" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
                 </Grid>
 
                 <!-- ====== CONTROLS BAR ====== -->
-                <Border Grid.Row="2" Background="#1A1A1C" BorderBrush="#333336" BorderThickness="0,1,0,0">
-                    <DockPanel Margin="10,0">
+                <Border Grid.Row="2" Background="#0C0C0E" BorderBrush="#222" BorderThickness="0,1,0,0" CornerRadius="0,0,16,16">
+                    <DockPanel Margin="16,0">
                         <!-- Stop button on left -->
                         <Button DockPanel.Dock="Left" Content="■ Stop" Style="{StaticResource StopBtn}"
-                                Click="Stop_Click" Padding="12,5"/>
+                                Click="Stop_Click" Padding="16,6" Margin="0,0,0,0" VerticalAlignment="Center" Height="28"/>
 
                         <!-- Controls on right -->
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                             <!-- Pause indicator -->
                             <TextBlock x:Name="PauseIndicator" Text="⏸ PAUSED" FontSize="11" Foreground="#FFCC00"
-                                       VerticalAlignment="Center" Margin="0,0,8,0" Visibility="Collapsed"
-                                       FontWeight="SemiBold"/>
+                                       VerticalAlignment="Center" Margin="0,0,12,0" Visibility="Collapsed"
+                                       FontWeight="Bold"/>
 
                             <!-- Mode toggle -->
                             <Button x:Name="ModeToggle" Content="📌 Notch" Style="{StaticResource PrompterBtn}"
-                                    Click="ModeToggle_Click" ToolTip="Toggle Notch/Floating"/>
-                            <Rectangle Width="1" Height="18" Fill="#444" Margin="6,0"/>
+                                    Click="ModeToggle_Click" ToolTip="Toggle Notch/Floating" Padding="12,4"/>
+                            <Rectangle Width="1" Height="16" Fill="#333" Margin="8,0"/>
 
                             <!-- Voice toggle -->
                             <Button x:Name="VoiceToggle" Content="🎤 Voice" Style="{StaticResource PrompterBtn}"
-                                    Click="VoiceToggle_Click" ToolTip="Toggle voice scrolling"/>
+                                    Click="VoiceToggle_Click" ToolTip="Toggle voice scrolling" Padding="12,4"/>
                         </StackPanel>
 
                         <!-- Speed controls center -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button x:Name="Speed1" Content="1×" Style="{StaticResource SpeedBtnActive}"
-                                    Click="Speed_Click" Tag="1"/>
+                                    Click="Speed_Click" Tag="1" Padding="10,4"/>
                             <Button x:Name="Speed15" Content="1.5×" Style="{StaticResource PrompterBtn}"
-                                    Click="Speed_Click" Tag="1.5"/>
+                                    Click="Speed_Click" Tag="1.5" Padding="10,4"/>
                             <Button x:Name="Speed2" Content="2×" Style="{StaticResource PrompterBtn}"
-                                    Click="Speed_Click" Tag="2"/>
+                                    Click="Speed_Click" Tag="2" Padding="10,4"/>
                             <Button x:Name="Speed3" Content="3×" Style="{StaticResource PrompterBtn}"
-                                    Click="Speed_Click" Tag="3"/>
+                                    Click="Speed_Click" Tag="3" Padding="10,4"/>
                         </StackPanel>
                     </DockPanel>
                 </Border>

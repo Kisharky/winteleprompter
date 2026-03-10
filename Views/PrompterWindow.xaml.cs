@@ -249,8 +249,8 @@ public partial class PrompterWindow : Window
         if (mode == PrompterMode.Notch)
         {
             // Notch: top center, rounded bottom corners
-            MainBorder.CornerRadius = new CornerRadius(0, 0, 12, 12);
-            MainBorder.Background = new SolidColorBrush(Color.FromArgb(0xF0, 0x1C, 0x1C, 0x1E));
+            MainBorder.CornerRadius = new CornerRadius(0, 0, 16, 16);
+            MainBorder.Background = new SolidColorBrush(Color.FromArgb(0xEE, 0x1C, 0x1C, 0x1E));
 
             // Position at top center of primary screen
             var screen = SystemParameters.WorkArea;
