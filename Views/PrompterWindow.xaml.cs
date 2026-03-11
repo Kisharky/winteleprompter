@@ -4,6 +4,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using MoodyClone.Helpers;
 using MoodyClone.Models;
 using MoodyClone.Services;
@@ -19,7 +20,7 @@ public partial class PrompterWindow : Window
 
     // Scroll state
     private double _scrollPosition;
-    private double _basePixelsPerSecond = 40.0;
+    private double _basePixelsPerSecond = 30.0; // Notch default: slower
     private double _currentSpeedMultiplier = 1.0;
     private bool _isPaused;
     private bool _isHoverPaused;
@@ -33,6 +34,11 @@ public partial class PrompterWindow : Window
     // Mode
     private PrompterMode _currentMode;
     private bool _isClosing;
+
+    // Notch dimensions (compact)
+    private const double NotchWidth = 460;
+    private const double NotchHeight = 160;
+    private const double NotchFontSize = 22;
 
     public PrompterWindow(string scriptText, AppSettings settings)
     {
@@ -48,17 +54,13 @@ public partial class PrompterWindow : Window
 
         // Set text
         ScriptText.Text = scriptText;
-        ScriptText.FontSize = settings.FontSize;
-        ScriptText.LineHeight = settings.FontSize * 1.35;
-        ApplyTextColor(settings.TextColor);
 
-        // Set size
-        this.Width = settings.PrompterWidth;
-        this.Height = settings.PrompterHeight;
-
-        // Apply mode
+        // Apply mode first (sets dimensions + position)
         ApplyMode(_currentMode);
         UpdateSpeedButtonStates();
+
+        // Apply text color
+        ApplyTextColor(settings.TextColor);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -66,10 +68,10 @@ public partial class PrompterWindow : Window
         // Apply screen capture invisibility
         ApplyDisplayAffinity();
 
-        // Adjust padding so first/last text aligns with center guide
-        var textAreaHeight = TextScroller.ActualHeight;
-        TopPadding.Height = textAreaHeight / 2;
-        BottomPadding.Height = textAreaHeight / 2;
+        // Adjust padding so first line centers on the reading guide
+        var halfHeight = TextScroller.ActualHeight / 2;
+        TopPadding.Height = halfHeight;
+        BottomPadding.Height = halfHeight;
 
         // Start audio monitoring
         StartAudioMonitoring();
@@ -78,14 +80,10 @@ public partial class PrompterWindow : Window
         _lastFrameTime = DateTime.Now;
         CompositionTarget.Rendering += OnRendering;
 
-        // Hover-to-pause
-        TextScroller.MouseEnter += (_, _) => { _isHoverPaused = true; UpdatePauseVisual(); };
-        TextScroller.MouseLeave += (_, _) => { _isHoverPaused = false; UpdatePauseVisual(); };
-
         this.Focus();
     }
 
-    // ===================== SCREEN CAPTURE INVISIBILITY =====================
+    // ===================== SCREEN CAPTURE =====================
 
     private void ApplyDisplayAffinity()
     {
@@ -93,11 +91,36 @@ public partial class PrompterWindow : Window
         {
             var hwnd = new WindowInteropHelper(this).Handle;
             if (hwnd != IntPtr.Zero)
-            {
                 NativeMethods.SetWindowDisplayAffinity(hwnd, NativeMethods.WDA_EXCLUDEFROMCAPTURE);
-            }
         }
         catch { }
+    }
+
+    // ===================== HOVER CONTROLS =====================
+
+    private void Window_MouseEnter(object sender, MouseEventArgs e)
+    {
+        _isHoverPaused = true;
+        UpdatePauseVisual();
+        FadeControls(true);
+    }
+
+    private void Window_MouseLeave(object sender, MouseEventArgs e)
+    {
+        _isHoverPaused = false;
+        UpdatePauseVisual();
+        FadeControls(false);
+    }
+
+    private void FadeControls(bool show)
+    {
+        HoverControls.IsHitTestVisible = show;
+        var anim = new DoubleAnimation(show ? 1.0 : 0.0, TimeSpan.FromMilliseconds(150));
+        HoverControls.BeginAnimation(OpacityProperty, anim);
+
+        // Also show voice beam when controls are visible
+        var beamAnim = new DoubleAnimation(show ? 0.85 : 0.0, TimeSpan.FromMilliseconds(150));
+        VoiceBeam.BeginAnimation(OpacityProperty, beamAnim);
     }
 
     // ===================== SMOOTH SCROLL ENGINE =====================
@@ -109,58 +132,51 @@ public partial class PrompterWindow : Window
         var now = DateTime.Now;
         var deltaSeconds = (now - _lastFrameTime).TotalSeconds;
         _lastFrameTime = now;
-
-        // Clamp delta to avoid huge jumps (e.g., after window un-freeze)
         if (deltaSeconds > 0.1) deltaSeconds = 0.016;
 
-        // Voice beam update
         UpdateVoiceBeam();
 
-        // Determine if scrolling should happen
         bool effectivelyPaused = _isPaused || _isHoverPaused || (_isVoiceMode && _isVoicePaused);
 
         if (_isVoiceMode && _voiceTargetOffset >= 0)
         {
-            // Smooth approach to voice target
             double diff = _voiceTargetOffset - _scrollPosition;
-            if (Math.Abs(diff) > 1)
-            {
-                _scrollPosition += diff * 0.08; // Smooth ease
-            }
+            if (Math.Abs(diff) > 0.5)
+                _scrollPosition += diff * 0.08;
             else
-            {
                 _scrollPosition = _voiceTargetOffset;
-            }
             TextScroller.ScrollToVerticalOffset(_scrollPosition);
         }
         else if (!effectivelyPaused)
         {
-            // Auto-scroll
-            double pixelsThisFrame = _basePixelsPerSecond * _currentSpeedMultiplier * deltaSeconds;
-            _scrollPosition += pixelsThisFrame;
-
-            // Clamp
-            var maxScroll = TextScroller.ScrollableHeight;
-            if (_scrollPosition > maxScroll) _scrollPosition = maxScroll;
-
+            double pxThisFrame = _basePixelsPerSecond * _currentSpeedMultiplier * deltaSeconds;
+            _scrollPosition += pxThisFrame;
+            var max = TextScroller.ScrollableHeight;
+            if (_scrollPosition > max)
+            {
+                _scrollPosition = max;
+                // Show end indicator
+                if (EndIndicator.Opacity < 1)
+                {
+                    var a = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(400));
+                    EndIndicator.BeginAnimation(OpacityProperty, a);
+                }
+            }
             TextScroller.ScrollToVerticalOffset(_scrollPosition);
         }
     }
 
-    // ===================== VOICE FEEDBACK BEAM =====================
+    // ===================== VOICE BEAM =====================
 
     private void StartAudioMonitoring()
     {
         var mics = AudioService.GetMicrophones();
         int deviceIndex = 0;
-
-        // Try to use preferred mic
         if (!string.IsNullOrEmpty(_settings.PreferredMicrophone))
         {
-            var preferred = mics.FirstOrDefault(m => m.Name == _settings.PreferredMicrophone);
-            if (preferred.Name != null) deviceIndex = preferred.Index;
+            var pref = mics.FirstOrDefault(m => m.Name == _settings.PreferredMicrophone);
+            if (pref.Name != null) deviceIndex = pref.Index;
         }
-
         _audioService.StartMonitoring(deviceIndex);
     }
 
@@ -169,16 +185,10 @@ public partial class PrompterWindow : Window
         try
         {
             double rms = _audioService.CurrentRms;
-            // Scale: RMS typically 0..0.3 for speech
-            double normalizedLevel = Math.Min(rms / 0.15, 1.0);
-            double targetWidth = normalizedLevel * (this.ActualWidth * 0.8);
-
-            // Smooth interpolation
-            double currentWidth = VoiceBeam.Width;
-            VoiceBeam.Width = currentWidth + (targetWidth - currentWidth) * 0.3;
-
-            // Brightness
-            VoiceBeam.Opacity = 0.4 + normalizedLevel * 0.6;
+            double level = Math.Min(rms / 0.12, 1.0);
+            double target = level * (this.ActualWidth * 0.75);
+            double cur = VoiceBeam.Width;
+            VoiceBeam.Width = double.IsNaN(cur) ? target : cur + (target - cur) * 0.3;
         }
         catch { }
     }
@@ -191,11 +201,10 @@ public partial class PrompterWindow : Window
 
         if (_isVoiceMode)
         {
-            VoiceToggle.Content = "🎤 Voice ON";
+            VoiceToggle.Content = "🎤✓";
             VoiceToggle.Background = new SolidColorBrush(Color.FromRgb(0x30, 0xD1, 0x58));
-            VoiceToggle.Foreground = new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x1E));
+            VoiceToggle.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x00, 0x00));
 
-            // Start speech recognition
             _speechService.LoadScript(_scriptText);
             _speechService.WordRecognized += OnWordRecognized;
             _speechService.SpeechPaused += OnSpeechPaused;
@@ -204,9 +213,9 @@ public partial class PrompterWindow : Window
         }
         else
         {
-            VoiceToggle.Content = "🎤 Voice";
-            VoiceToggle.Background = new SolidColorBrush(Color.FromArgb(0x44, 0xFF, 0xFF, 0xFF));
-            VoiceToggle.Foreground = new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0xCC));
+            VoiceToggle.Content = "🎤";
+            VoiceToggle.Background = new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF));
+            VoiceToggle.Foreground = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD));
 
             _speechService.WordRecognized -= OnWordRecognized;
             _speechService.SpeechPaused -= OnSpeechPaused;
@@ -221,8 +230,6 @@ public partial class PrompterWindow : Window
         {
             _isVoicePaused = false;
             UpdatePauseVisual();
-
-            // Estimate scroll position based on word index
             if (_speechService.Words.Length > 0)
             {
                 double progress = (double)wordIndex / _speechService.Words.Length;
@@ -248,38 +255,51 @@ public partial class PrompterWindow : Window
 
         if (mode == PrompterMode.Notch)
         {
-            // Notch: top center, rounded bottom corners
-            MainBorder.CornerRadius = new CornerRadius(0, 0, 16, 16);
-            MainBorder.Background = new SolidColorBrush(Color.FromArgb(0xEE, 0x1C, 0x1C, 0x1E));
+            this.Width = NotchWidth;
+            this.Height = NotchHeight;
+            MainBorder.CornerRadius = new CornerRadius(0, 0, 18, 18);
+            MainBorder.Background = new SolidColorBrush(Colors.Black);
+            ScriptText.FontSize = NotchFontSize;
+            ScriptText.LineHeight = 30;
 
-            // Position at top center of primary screen
-            var screen = SystemParameters.WorkArea;
-            this.Left = (screen.Width - this.Width) / 2;
+            // Center top of primary screen
+            var screen = SystemParameters.PrimaryScreenWidth;
+            this.Left = (screen - this.Width) / 2;
             this.Top = 0;
 
-            ModeToggle.Content = "📌 Notch";
+            ModeToggle.Content = "🪟";
+            ModeToggle.ToolTip = "Switch to floating";
             ResizeGrip.Visibility = Visibility.Collapsed;
         }
         else
         {
-            // Floating: rounded all corners, draggable
-            MainBorder.CornerRadius = new CornerRadius(12);
-            MainBorder.Background = new SolidColorBrush(Color.FromArgb(0xAA, 0x00, 0x00, 0x00));
+            // Floating: remember saved size or default
+            this.Width = Math.Max(_settings.PrompterWidth, 500);
+            this.Height = Math.Max(_settings.PrompterHeight, 280);
+            MainBorder.CornerRadius = new CornerRadius(14);
+            MainBorder.Background = new SolidColorBrush(Color.FromArgb(0xD0, 0x10, 0x10, 0x12));
+            ScriptText.FontSize = _settings.FontSize;
+            ScriptText.LineHeight = _settings.FontSize * 1.35;
 
-            ModeToggle.Content = "🪟 Float";
+            var wa = SystemParameters.WorkArea;
+            this.Left = (wa.Width - this.Width) / 2;
+            this.Top = (wa.Height - this.Height) / 2;
+
+            ModeToggle.Content = "📌";
+            ModeToggle.ToolTip = "Switch to notch";
             ResizeGrip.Visibility = Visibility.Visible;
         }
     }
 
     private void ModeToggle_Click(object sender, RoutedEventArgs e)
     {
-        var newMode = _currentMode == PrompterMode.Notch ? PrompterMode.Floating : PrompterMode.Notch;
-        ApplyMode(newMode);
-        _settings.PrompterMode = newMode;
+        var next = _currentMode == PrompterMode.Notch ? PrompterMode.Floating : PrompterMode.Notch;
+        ApplyMode(next);
+        _settings.PrompterMode = next;
         _settings.Save();
     }
 
-    // ===================== SPEED CONTROLS =====================
+    // ===================== SPEED =====================
 
     private static double GetMultiplierFromStep(SpeedStep step) => step switch
     {
@@ -292,7 +312,7 @@ public partial class PrompterWindow : Window
 
     private void Speed_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is string tagStr && double.TryParse(tagStr, out double mult))
+        if (sender is Button btn && btn.Tag is string tag && double.TryParse(tag, out double mult))
         {
             _currentSpeedMultiplier = mult;
             UpdateSpeedButtonStates();
@@ -301,13 +321,12 @@ public partial class PrompterWindow : Window
 
     private void UpdateSpeedButtonStates()
     {
-        var activeStyle = (Style)FindResource("SpeedBtnActive");
-        var normalStyle = (Style)FindResource("PrompterBtn");
-
-        Speed1.Style = _currentSpeedMultiplier == 1.0 ? activeStyle : normalStyle;
-        Speed15.Style = _currentSpeedMultiplier == 1.5 ? activeStyle : normalStyle;
-        Speed2.Style = _currentSpeedMultiplier == 2.0 ? activeStyle : normalStyle;
-        Speed3.Style = _currentSpeedMultiplier == 3.0 ? activeStyle : normalStyle;
+        var active = (Style)FindResource("ActiveSpeedBtn");
+        var normal = (Style)FindResource("OverlayBtn");
+        Speed1.Style = _currentSpeedMultiplier == 1.0 ? active : normal;
+        Speed15.Style = _currentSpeedMultiplier == 1.5 ? active : normal;
+        Speed2.Style = _currentSpeedMultiplier == 2.0 ? active : normal;
+        Speed3.Style = _currentSpeedMultiplier == 3.0 ? active : normal;
     }
 
     private void IncreaseSpeed()
@@ -348,11 +367,11 @@ public partial class PrompterWindow : Window
 
     private void UpdatePauseVisual()
     {
-        bool anyPause = _isPaused || _isHoverPaused || (_isVoiceMode && _isVoicePaused);
-        PauseIndicator.Visibility = anyPause ? Visibility.Visible : Visibility.Collapsed;
+        bool paused = _isPaused || _isHoverPaused || (_isVoiceMode && _isVoicePaused);
+        PauseIndicator.Visibility = paused ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // ===================== KEYBOARD SHORTCUTS =====================
+    // ===================== KEYBOARD =====================
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
@@ -362,41 +381,24 @@ public partial class PrompterWindow : Window
                 TogglePause();
                 e.Handled = true;
                 break;
-
             case Key.Up:
                 IncreaseSpeed();
                 e.Handled = true;
                 break;
-
             case Key.Down:
                 DecreaseSpeed();
                 e.Handled = true;
                 break;
-
             case Key.OemPlus when Keyboard.Modifiers == ModifierKeys.Control:
             case Key.Add when Keyboard.Modifiers == ModifierKeys.Control:
-                if (ScriptText.FontSize < 96)
-                {
-                    ScriptText.FontSize += 4;
-                    ScriptText.LineHeight = ScriptText.FontSize * 1.35;
-                    _settings.FontSize = (int)ScriptText.FontSize;
-                    _settings.Save();
-                }
+                if (ScriptText.FontSize < 96) { ScriptText.FontSize += 2; ScriptText.LineHeight = ScriptText.FontSize * 1.35; }
                 e.Handled = true;
                 break;
-
             case Key.OemMinus when Keyboard.Modifiers == ModifierKeys.Control:
             case Key.Subtract when Keyboard.Modifiers == ModifierKeys.Control:
-                if (ScriptText.FontSize > 20)
-                {
-                    ScriptText.FontSize -= 4;
-                    ScriptText.LineHeight = ScriptText.FontSize * 1.35;
-                    _settings.FontSize = (int)ScriptText.FontSize;
-                    _settings.Save();
-                }
+                if (ScriptText.FontSize > 12) { ScriptText.FontSize -= 2; ScriptText.LineHeight = ScriptText.FontSize * 1.35; }
                 e.Handled = true;
                 break;
-
             case Key.Escape:
                 StopPrompter();
                 e.Handled = true;
@@ -409,44 +411,30 @@ public partial class PrompterWindow : Window
     private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (_currentMode == PrompterMode.Floating)
-        {
             this.DragMove();
-        }
     }
 
     private void ResizeGrip_DragDelta(object sender, DragDeltaEventArgs e)
     {
-        double newWidth = this.Width + e.HorizontalChange;
-        double newHeight = this.Height + e.VerticalChange;
-
-        if (newWidth >= 400) this.Width = newWidth;
-        if (newHeight >= 200) this.Height = newHeight;
-
+        double w = this.Width + e.HorizontalChange;
+        double h = this.Height + e.VerticalChange;
+        if (w >= 400) this.Width = w;
+        if (h >= 200) this.Height = h;
         _settings.PrompterWidth = this.Width;
         _settings.PrompterHeight = this.Height;
     }
 
     // ===================== STOP =====================
 
-    private void Stop_Click(object sender, RoutedEventArgs e)
-    {
-        StopPrompter();
-    }
+    private void Stop_Click(object sender, RoutedEventArgs e) => StopPrompter();
 
     private void StopPrompter()
     {
         _isClosing = true;
-
-        // Unsubscribe from rendering
         CompositionTarget.Rendering -= OnRendering;
-
-        // Stop services
         _audioService.Dispose();
         _speechService.Dispose();
-
-        // Save settings
         _settings.Save();
-
         this.Close();
     }
 

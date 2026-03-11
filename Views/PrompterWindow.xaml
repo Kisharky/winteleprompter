@@ -7,38 +7,38 @@
         Background="Transparent"
         Topmost="True"
         ShowInTaskbar="False"
-        Width="700" Height="300"
-        WindowStartupLocation="CenterScreen"
+        Width="460" Height="160"
+        WindowStartupLocation="Manual"
         KeyDown="Window_KeyDown"
         Loaded="Window_Loaded"
+        MouseEnter="Window_MouseEnter"
+        MouseLeave="Window_MouseLeave"
         FontFamily="Segoe UI">
 
     <Window.Resources>
-        <!-- Prompter control button -->
-        <Style x:Key="PrompterBtn" TargetType="Button">
-            <Setter Property="Background" Value="#44FFFFFF"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="FontSize" Value="12"/>
+        <!-- Hover overlay button -->
+        <Style x:Key="OverlayBtn" TargetType="Button">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="Foreground" Value="#DDDDDD"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="3,0"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="Margin" Value="2,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="5"
-                                Padding="{TemplateBinding Padding}">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#66FFFFFF"/>
+                                <Setter TargetName="bd" Property="Background" Value="#55FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#88FFFFFF"/>
+                                <Setter TargetName="bd" Property="Background" Value="#77FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -47,178 +47,173 @@
         </Style>
 
         <!-- Active speed button -->
-        <Style x:Key="SpeedBtnActive" TargetType="Button" BasedOn="{StaticResource PrompterBtn}">
+        <Style x:Key="ActiveSpeedBtn" TargetType="Button" BasedOn="{StaticResource OverlayBtn}">
             <Setter Property="Background" Value="#30D158"/>
-            <Setter Property="Foreground" Value="#1C1C1E"/>
+            <Setter Property="Foreground" Value="#000"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
 
         <!-- Stop button -->
-        <Style x:Key="StopBtn" TargetType="Button" BasedOn="{StaticResource PrompterBtn}">
+        <Style x:Key="StopBtn" TargetType="Button" BasedOn="{StaticResource OverlayBtn}">
             <Setter Property="Background" Value="#FF453A"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
     </Window.Resources>
 
-    <!-- Main container -->
+    <!-- Outer clip for rounded bottom corners -->
     <Grid x:Name="RootGrid">
         <Border x:Name="MainBorder"
-                Background="#EE1C1C1E"
-                CornerRadius="0,0,16,16"
+                Background="#000000"
+                CornerRadius="0,0,18,18"
                 ClipToBounds="True">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="30" ShadowDepth="10" Opacity="0.6" Color="Black"/>
+                <DropShadowEffect BlurRadius="28" ShadowDepth="8" Opacity="0.7" Color="Black"/>
             </Border.Effect>
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="4"/>    <!-- Voice beam -->
-                    <RowDefinition Height="*"/>    <!-- Text area -->
-                    <RowDefinition Height="40"/>   <!-- Controls -->
+                    <RowDefinition Height="3"/>   <!-- Voice beam -->
+                    <RowDefinition Height="*"/>   <!-- Text -->
+                    <RowDefinition Height="0"/>   <!-- Controls (hidden by default, expanded on hover) -->
                 </Grid.RowDefinitions>
 
                 <!-- ====== VOICE FEEDBACK BEAM ====== -->
-                <Grid Grid.Row="0" Background="#111113">
+                <Grid Grid.Row="0" Background="Transparent">
                     <Rectangle x:Name="VoiceBeam"
-                               Height="3"
+                               Height="2"
                                Fill="#30D158"
                                HorizontalAlignment="Center"
                                Width="0"
-                               RadiusX="1.5" RadiusY="1.5"
-                               Opacity="0.85"/>
+                               RadiusX="1" RadiusY="1"
+                               Opacity="0"/>
                 </Grid>
 
-                <!-- ====== TEXT DISPLAY ====== -->
+                <!-- ====== TEXT AREA ====== -->
                 <Grid Grid.Row="1" ClipToBounds="True">
-                    <!-- Reading guide line (at vertical center) -->
-                    <Border x:Name="ReadingGuide"
-                            VerticalAlignment="Center"
-                            Height="3"
-                            HorizontalAlignment="Stretch"
-                            IsHitTestVisible="False"
-                            Opacity="0.8">
+
+                    <!-- Reading guide: subtle line at center -->
+                    <Border VerticalAlignment="Center" Height="1"
+                            HorizontalAlignment="Stretch" IsHitTestVisible="False" Opacity="0.15">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                 <GradientStop Color="Transparent" Offset="0"/>
-                                <GradientStop Color="#5530D158" Offset="0.1"/>
-                                <GradientStop Color="#5530D158" Offset="0.9"/>
+                                <GradientStop Color="White" Offset="0.2"/>
+                                <GradientStop Color="White" Offset="0.8"/>
                                 <GradientStop Color="Transparent" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
 
-                    <!-- Scroll viewer for text -->
+                    <!-- Scrollable text -->
                     <ScrollViewer x:Name="TextScroller"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Hidden"
-                                  IsHitTestVisible="True"
-                                  Focusable="False"
-                                  PanningMode="None">
+                                  Focusable="False" IsHitTestVisible="True">
                         <StackPanel>
-                            <!-- Top padding to center first line -->
-                            <Border x:Name="TopPadding" Height="100"/>
+                            <Border x:Name="TopPadding" Height="60"/>
 
-                            <!-- Script text -->
                             <TextBlock x:Name="ScriptText"
-                                       FontSize="56"
-                                       LineHeight="72"
-                                       FontWeight="Medium"
+                                       FontSize="22"
+                                       LineHeight="30"
                                        TextAlignment="Center"
                                        TextWrapping="Wrap"
                                        Foreground="White"
-                                       Padding="40,0"
-                                       FontFamily="Segoe UI Variable Display, Segoe UI, -apple-system"/>
+                                       FontWeight="Normal"
+                                       Padding="28,0"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI"/>
 
-                            <!-- End of text indicator -->
-                            <StackPanel x:Name="EndIndicator" Margin="0,40,0,60" Opacity="0.5">
-                                <Rectangle Width="40" Height="2" Fill="#555" Margin="0,0,0,12"
-                                           HorizontalAlignment="Center" RadiusX="1" RadiusY="1"/>
-                            </StackPanel>
+                            <!-- End indicator -->
+                            <Border x:Name="EndIndicator" Margin="0,24,0,0" Opacity="0">
+                                <Rectangle Width="32" Height="2" Fill="#444"
+                                           HorizontalAlignment="Center"
+                                           RadiusX="1" RadiusY="1"/>
+                            </Border>
 
-                            <!-- Bottom padding -->
-                            <Border x:Name="BottomPadding" Height="100"/>
+                            <Border x:Name="BottomPadding" Height="60"/>
                         </StackPanel>
                     </ScrollViewer>
 
-                    <!-- Fade overlays -->
-                    <Border VerticalAlignment="Top" Height="60" IsHitTestVisible="False">
+                    <!-- Top fade -->
+                    <Border VerticalAlignment="Top" Height="36" IsHitTestVisible="False">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#EE1C1C1E" Offset="0"/>
-                                <GradientStop Color="#001C1C1E" Offset="1"/>
+                                <GradientStop Color="#FF000000" Offset="0"/>
+                                <GradientStop Color="#00000000" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
-                    <Border VerticalAlignment="Bottom" Height="60" IsHitTestVisible="False">
+
+                    <!-- Bottom fade -->
+                    <Border VerticalAlignment="Bottom" Height="36" IsHitTestVisible="False">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#001C1C1E" Offset="0"/>
-                                <GradientStop Color="#EE1C1C1E" Offset="1"/>
+                                <GradientStop Color="#00000000" Offset="0"/>
+                                <GradientStop Color="#FF000000" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
                 </Grid>
 
-                <!-- ====== CONTROLS BAR ====== -->
-                <Border Grid.Row="2" Background="#0C0C0E" BorderBrush="#222" BorderThickness="0,1,0,0" CornerRadius="0,0,16,16">
-                    <DockPanel Margin="16,0">
-                        <!-- Stop button on left -->
-                        <Button DockPanel.Dock="Left" Content="■ Stop" Style="{StaticResource StopBtn}"
-                                Click="Stop_Click" Padding="16,6" Margin="0,0,0,0" VerticalAlignment="Center" Height="28"/>
+                <!-- ====== HOVER CONTROLS OVERLAY ====== 
+                     Sits on top of the text; animated in/out on hover -->
+                <Border x:Name="HoverControls"
+                        Grid.Row="0" Grid.RowSpan="3"
+                        VerticalAlignment="Bottom"
+                        Height="36"
+                        Background="#CC000000"
+                        CornerRadius="0,0,18,18"
+                        Opacity="0"
+                        IsHitTestVisible="False">
+                    <Grid Margin="12,0">
+                        <!-- Stop -->
+                        <Button DockPanel.Dock="Left" Content="■ Stop" 
+                                Style="{StaticResource StopBtn}"
+                                Click="Stop_Click"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"/>
 
-                        <!-- Controls on right -->
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Pause indicator -->
-                            <TextBlock x:Name="PauseIndicator" Text="⏸ PAUSED" FontSize="11" Foreground="#FFCC00"
-                                       VerticalAlignment="Center" Margin="0,0,12,0" Visibility="Collapsed"
-                                       FontWeight="Bold"/>
+                        <!-- Pause indicator -->
+                        <TextBlock x:Name="PauseIndicator" Text="⏸"
+                                   FontSize="13" Foreground="#FFCC00"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Visibility="Collapsed"/>
 
-                            <!-- Mode toggle -->
-                            <Button x:Name="ModeToggle" Content="📌 Notch" Style="{StaticResource PrompterBtn}"
-                                    Click="ModeToggle_Click" ToolTip="Toggle Notch/Floating" Padding="12,4"/>
-                            <Rectangle Width="1" Height="16" Fill="#333" Margin="8,0"/>
-
-                            <!-- Voice toggle -->
-                            <Button x:Name="VoiceToggle" Content="🎤 Voice" Style="{StaticResource PrompterBtn}"
-                                    Click="VoiceToggle_Click" ToolTip="Toggle voice scrolling" Padding="12,4"/>
+                        <!-- Right controls -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <Button x:Name="Speed1" Content="1×" Style="{StaticResource ActiveSpeedBtn}" Click="Speed_Click" Tag="1"/>
+                            <Button x:Name="Speed15" Content="1.5×" Style="{StaticResource OverlayBtn}" Click="Speed_Click" Tag="1.5"/>
+                            <Button x:Name="Speed2" Content="2×" Style="{StaticResource OverlayBtn}" Click="Speed_Click" Tag="2"/>
+                            <Button x:Name="Speed3" Content="3×" Style="{StaticResource OverlayBtn}" Click="Speed_Click" Tag="3"/>
+                            <Rectangle Width="1" Height="14" Fill="#444" Margin="6,0"/>
+                            <Button x:Name="VoiceToggle" Content="🎤" Style="{StaticResource OverlayBtn}" Click="VoiceToggle_Click" ToolTip="Voice scroll" Padding="7,4"/>
+                            <Button x:Name="ModeToggle" Content="🪟" Style="{StaticResource OverlayBtn}" Click="ModeToggle_Click" ToolTip="Switch to floating" Padding="7,4"/>
                         </StackPanel>
-
-                        <!-- Speed controls center -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Button x:Name="Speed1" Content="1×" Style="{StaticResource SpeedBtnActive}"
-                                    Click="Speed_Click" Tag="1" Padding="10,4"/>
-                            <Button x:Name="Speed15" Content="1.5×" Style="{StaticResource PrompterBtn}"
-                                    Click="Speed_Click" Tag="1.5" Padding="10,4"/>
-                            <Button x:Name="Speed2" Content="2×" Style="{StaticResource PrompterBtn}"
-                                    Click="Speed_Click" Tag="2" Padding="10,4"/>
-                            <Button x:Name="Speed3" Content="3×" Style="{StaticResource PrompterBtn}"
-                                    Click="Speed_Click" Tag="3" Padding="10,4"/>
-                        </StackPanel>
-                    </DockPanel>
+                    </Grid>
                 </Border>
 
-                <!-- ====== RESIZE GRIP (floating mode) ====== -->
+                <!-- Drag area (top strip, notch mode) -->
+                <Border x:Name="DragHandle" Grid.Row="0" Grid.RowSpan="2"
+                        Background="Transparent" Cursor="SizeAll"
+                        MouseLeftButtonDown="DragHandle_MouseLeftButtonDown"/>
+
+                <!-- Resize grip (floating mode only) -->
                 <Thumb x:Name="ResizeGrip" Grid.Row="2"
                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                       Width="16" Height="16" Cursor="SizeNWSE"
-                       DragDelta="ResizeGrip_DragDelta"
-                       Opacity="0.4">
+                       Width="14" Height="14" Cursor="SizeNWSE"
+                       DragDelta="ResizeGrip_DragDelta" Visibility="Collapsed" Opacity="0.4">
                     <Thumb.Template>
                         <ControlTemplate>
-                            <Canvas Width="16" Height="16">
-                                <Line X1="14" Y1="4" X2="4" Y2="14" Stroke="#888" StrokeThickness="1"/>
-                                <Line X1="14" Y1="8" X2="8" Y2="14" Stroke="#888" StrokeThickness="1"/>
-                                <Line X1="14" Y1="12" X2="12" Y2="14" Stroke="#888" StrokeThickness="1"/>
+                            <Canvas Width="14" Height="14">
+                                <Line X1="12" Y1="3" X2="3" Y2="12" Stroke="#888" StrokeThickness="1"/>
+                                <Line X1="12" Y1="7" X2="7" Y2="12" Stroke="#888" StrokeThickness="1"/>
+                                <Line X1="12" Y1="11" X2="11" Y2="12" Stroke="#888" StrokeThickness="1"/>
                             </Canvas>
                         </ControlTemplate>
                     </Thumb.Template>
                 </Thumb>
-
-                <!-- ====== DRAG HANDLE (for floating mode) ====== -->
-                <Border x:Name="DragHandle" Grid.Row="0" Grid.RowSpan="1"
-                        Background="Transparent" Cursor="SizeAll"
-                        MouseLeftButtonDown="DragHandle_MouseLeftButtonDown"/>
             </Grid>
         </Border>
     </Grid>
