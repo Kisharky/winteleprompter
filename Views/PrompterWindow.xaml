@@ -7,38 +7,43 @@
         Background="Transparent"
         Topmost="True"
         ShowInTaskbar="False"
-        Width="460" Height="160"
+        Width="500" Height="180"
         WindowStartupLocation="Manual"
         KeyDown="Window_KeyDown"
         Loaded="Window_Loaded"
         MouseEnter="Window_MouseEnter"
         MouseLeave="Window_MouseLeave"
-        FontFamily="Segoe UI">
+        FontFamily="Segoe UI Variable Display, Segoe UI">
 
     <Window.Resources>
-        <!-- Hover overlay button -->
-        <Style x:Key="OverlayBtn" TargetType="Button">
-            <Setter Property="Background" Value="#33FFFFFF"/>
-            <Setter Property="Foreground" Value="#DDDDDD"/>
+
+        <!-- iOS pill button -->
+        <Style x:Key="PillBtn" TargetType="Button">
+            <Setter Property="Foreground" Value="#FFFFFFCC"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Padding" Value="9,4"/>
-            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Margin" Value="3,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="bd"
+                                Background="#28FFFFFF"
+                                CornerRadius="20"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#40FFFFFF"
+                                BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#55FFFFFF"/>
+                                <Setter TargetName="bd" Property="Background" Value="#44FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#77FFFFFF"/>
+                                <Setter TargetName="bd" Property="Background" Value="#60FFFFFF"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#66FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -46,170 +51,248 @@
             </Setter>
         </Style>
 
-        <!-- Active speed button -->
-        <Style x:Key="ActiveSpeedBtn" TargetType="Button" BasedOn="{StaticResource OverlayBtn}">
-            <Setter Property="Background" Value="#30D158"/>
-            <Setter Property="Foreground" Value="#000"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-
-        <!-- Stop button -->
-        <Style x:Key="StopBtn" TargetType="Button" BasedOn="{StaticResource OverlayBtn}">
-            <Setter Property="Background" Value="#FF453A"/>
+        <!-- Active speed pill (green tinted) -->
+        <Style x:Key="ActivePillBtn" TargetType="Button" BasedOn="{StaticResource PillBtn}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="#CC30D158"
+                                CornerRadius="20"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#8830D158"
+                                BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#EE30D158"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Foreground" Value="White"/>
         </Style>
+
+        <!-- Red stop pill -->
+        <Style x:Key="StopPillBtn" TargetType="Button" BasedOn="{StaticResource PillBtn}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="#CCFF453A"
+                                CornerRadius="20"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#66FF453A"
+                                BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#EEFF453A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
     </Window.Resources>
 
-    <!-- Outer clip for rounded bottom corners -->
     <Grid x:Name="RootGrid">
+
+        <!-- ===== GLASSMORPHISM NOTCH BODY ===== -->
         <Border x:Name="MainBorder"
-                Background="#000000"
-                CornerRadius="0,0,18,18"
+                CornerRadius="0,0,28,28"
                 ClipToBounds="True">
+
+            <!-- Layered glass background -->
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#E5111113" Offset="0"/>
+                    <GradientStop Color="#F0050508" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+
             <Border.Effect>
-                <DropShadowEffect BlurRadius="28" ShadowDepth="8" Opacity="0.7" Color="Black"/>
+                <DropShadowEffect BlurRadius="40" ShadowDepth="12" Opacity="0.75" Color="#000000"/>
             </Border.Effect>
 
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="3"/>   <!-- Voice beam -->
-                    <RowDefinition Height="*"/>   <!-- Text -->
-                    <RowDefinition Height="0"/>   <!-- Controls (hidden by default, expanded on hover) -->
-                </Grid.RowDefinitions>
-
-                <!-- ====== VOICE FEEDBACK BEAM ====== -->
-                <Grid Grid.Row="0" Background="Transparent">
-                    <Rectangle x:Name="VoiceBeam"
-                               Height="2"
-                               Fill="#30D158"
-                               HorizontalAlignment="Center"
-                               Width="0"
-                               RadiusX="1" RadiusY="1"
-                               Opacity="0"/>
-                </Grid>
-
-                <!-- ====== TEXT AREA ====== -->
-                <Grid Grid.Row="1" ClipToBounds="True">
-
-                    <!-- Reading guide: subtle line at center -->
-                    <Border VerticalAlignment="Center" Height="1"
-                            HorizontalAlignment="Stretch" IsHitTestVisible="False" Opacity="0.15">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Color="Transparent" Offset="0"/>
-                                <GradientStop Color="White" Offset="0.2"/>
-                                <GradientStop Color="White" Offset="0.8"/>
-                                <GradientStop Color="Transparent" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-
-                    <!-- Scrollable text -->
-                    <ScrollViewer x:Name="TextScroller"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  VerticalScrollBarVisibility="Hidden"
-                                  Focusable="False" IsHitTestVisible="True">
-                        <StackPanel>
-                            <Border x:Name="TopPadding" Height="60"/>
-
-                            <TextBlock x:Name="ScriptText"
-                                       FontSize="22"
-                                       LineHeight="30"
-                                       TextAlignment="Center"
-                                       TextWrapping="Wrap"
-                                       Foreground="White"
-                                       FontWeight="Normal"
-                                       Padding="28,0"
-                                       FontFamily="Segoe UI Variable Display, Segoe UI"/>
-
-                            <!-- End indicator -->
-                            <Border x:Name="EndIndicator" Margin="0,24,0,0" Opacity="0">
-                                <Rectangle Width="32" Height="2" Fill="#444"
-                                           HorizontalAlignment="Center"
-                                           RadiusX="1" RadiusY="1"/>
-                            </Border>
-
-                            <Border x:Name="BottomPadding" Height="60"/>
-                        </StackPanel>
-                    </ScrollViewer>
-
-                    <!-- Top fade -->
-                    <Border VerticalAlignment="Top" Height="36" IsHitTestVisible="False">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#FF000000" Offset="0"/>
-                                <GradientStop Color="#00000000" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-
-                    <!-- Bottom fade -->
-                    <Border VerticalAlignment="Bottom" Height="36" IsHitTestVisible="False">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#00000000" Offset="0"/>
-                                <GradientStop Color="#FF000000" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-                </Grid>
-
-                <!-- ====== HOVER CONTROLS OVERLAY ====== 
-                     Sits on top of the text; animated in/out on hover -->
-                <Border x:Name="HoverControls"
-                        Grid.Row="0" Grid.RowSpan="3"
-                        VerticalAlignment="Bottom"
-                        Height="36"
-                        Background="#CC000000"
-                        CornerRadius="0,0,18,18"
-                        Opacity="0"
-                        IsHitTestVisible="False">
-                    <Grid Margin="12,0">
-                        <!-- Stop -->
-                        <Button DockPanel.Dock="Left" Content="■ Stop" 
-                                Style="{StaticResource StopBtn}"
-                                Click="Stop_Click"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Center"/>
-
-                        <!-- Pause indicator -->
-                        <TextBlock x:Name="PauseIndicator" Text="⏸"
-                                   FontSize="13" Foreground="#FFCC00"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   Visibility="Collapsed"/>
-
-                        <!-- Right controls -->
-                        <StackPanel Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center">
-                            <Button x:Name="Speed1" Content="1×" Style="{StaticResource ActiveSpeedBtn}" Click="Speed_Click" Tag="1"/>
-                            <Button x:Name="Speed15" Content="1.5×" Style="{StaticResource OverlayBtn}" Click="Speed_Click" Tag="1.5"/>
-                            <Button x:Name="Speed2" Content="2×" Style="{StaticResource OverlayBtn}" Click="Speed_Click" Tag="2"/>
-                            <Button x:Name="Speed3" Content="3×" Style="{StaticResource OverlayBtn}" Click="Speed_Click" Tag="3"/>
-                            <Rectangle Width="1" Height="14" Fill="#444" Margin="6,0"/>
-                            <Button x:Name="VoiceToggle" Content="🎤" Style="{StaticResource OverlayBtn}" Click="VoiceToggle_Click" ToolTip="Voice scroll" Padding="7,4"/>
-                            <Button x:Name="ModeToggle" Content="🪟" Style="{StaticResource OverlayBtn}" Click="ModeToggle_Click" ToolTip="Switch to floating" Padding="7,4"/>
-                        </StackPanel>
-                    </Grid>
+                <!-- Subtle inner highlight at top (iOS glass edge) -->
+                <Border VerticalAlignment="Top" Height="1" HorizontalAlignment="Stretch"
+                        IsHitTestVisible="False" Opacity="0.25">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="Transparent" Offset="0"/>
+                            <GradientStop Color="White" Offset="0.3"/>
+                            <GradientStop Color="White" Offset="0.7"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                 </Border>
 
-                <!-- Drag area (top strip, notch mode) -->
-                <Border x:Name="DragHandle" Grid.Row="0" Grid.RowSpan="2"
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3"/>   <!-- Voice beam -->
+                        <RowDefinition Height="*"/>   <!-- Text -->
+                    </Grid.RowDefinitions>
+
+                    <!-- VOICE BEAM (bottom of top strip) -->
+                    <Grid Grid.Row="0">
+                        <Rectangle x:Name="VoiceBeam"
+                                   Height="2.5"
+                                   HorizontalAlignment="Center"
+                                   Width="0"
+                                   RadiusX="2" RadiusY="2"
+                                   Opacity="0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="Transparent" Offset="0"/>
+                                    <GradientStop Color="#30D158" Offset="0.3"/>
+                                    <GradientStop Color="#34EE6A" Offset="0.5"/>
+                                    <GradientStop Color="#30D158" Offset="0.7"/>
+                                    <GradientStop Color="Transparent" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.Effect>
+                                <DropShadowEffect Color="#30D158" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
+                            </Rectangle.Effect>
+                        </Rectangle>
+                    </Grid>
+
+                    <!-- TEXT AREA -->
+                    <Grid Grid.Row="1" ClipToBounds="True">
+
+                        <!-- iOS-style center reading guide — subtle glow -->
+                        <Border VerticalAlignment="Center" Height="1.5"
+                                HorizontalAlignment="Stretch" IsHitTestVisible="False" Opacity="0.12">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="Transparent" Offset="0"/>
+                                    <GradientStop Color="White" Offset="0.15"/>
+                                    <GradientStop Color="White" Offset="0.85"/>
+                                    <GradientStop Color="Transparent" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+
+                        <ScrollViewer x:Name="TextScroller"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Hidden"
+                                      Focusable="False">
+                            <StackPanel>
+                                <Border x:Name="TopPadding" Height="80"/>
+
+                                <TextBlock x:Name="ScriptText"
+                                           FontSize="22"
+                                           LineHeight="31"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Foreground="White"
+                                           FontWeight="Light"
+                                           Padding="36,0"
+                                           FontFamily="Segoe UI Variable Display, Segoe UI">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect Color="Black" BlurRadius="6" ShadowDepth="0" Opacity="0.4"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+
+                                <Border x:Name="EndIndicator" Opacity="0" Margin="0,20,0,0">
+                                    <TextBlock Text="· · ·" FontSize="16" Foreground="#33FFFFFF"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <Border x:Name="BottomPadding" Height="80"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Top vignette fade -->
+                        <Border VerticalAlignment="Top" Height="44" IsHitTestVisible="False">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#F0111113" Offset="0"/>
+                                    <GradientStop Color="#00111113" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <!-- Bottom vignette fade -->
+                        <Border VerticalAlignment="Bottom" Height="44" IsHitTestVisible="False">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#00111113" Offset="0"/>
+                                    <GradientStop Color="#F0050508" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- HOVER UI OVERLAY — iOS pill controls -->
+                <Border x:Name="HoverControls"
+                        VerticalAlignment="Bottom"
+                        Height="40"
+                        Margin="14,0,14,8"
+                        Opacity="0"
+                        IsHitTestVisible="False"
+                        CornerRadius="20">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#CC000008" Offset="0"/>
+                            <GradientStop Color="#EE000005" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.5" Color="Black"/>
+                    </Border.Effect>
+                    <Border BorderBrush="#22FFFFFF" BorderThickness="1" CornerRadius="20">
+                        <Grid Margin="10,0">
+
+                            <!-- Left: Stop -->
+                            <Button Content="✕ Stop" Style="{StaticResource StopPillBtn}"
+                                    Click="Stop_Click"
+                                    HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+                            <!-- Center: Paused label -->
+                            <TextBlock x:Name="PauseIndicator" Text="⏸ paused"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="#FFCC00"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed"/>
+
+                            <!-- Right: speed + voice + mode -->
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Button x:Name="Speed1"  Content="1×"   Style="{StaticResource ActivePillBtn}" Click="Speed_Click" Tag="1"/>
+                                <Button x:Name="Speed15" Content="1.5×" Style="{StaticResource PillBtn}"       Click="Speed_Click" Tag="1.5"/>
+                                <Button x:Name="Speed2"  Content="2×"   Style="{StaticResource PillBtn}"       Click="Speed_Click" Tag="2"/>
+                                <Button x:Name="Speed3"  Content="3×"   Style="{StaticResource PillBtn}"       Click="Speed_Click" Tag="3"/>
+                                <!-- Separator dot -->
+                                <Ellipse Width="3" Height="3" Fill="#33FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
+                                <Button x:Name="VoiceToggle" Content="🎤" Style="{StaticResource PillBtn}" Click="VoiceToggle_Click" Padding="8,4"/>
+                                <Button x:Name="ModeToggle"  Content="🪟" Style="{StaticResource PillBtn}" Click="ModeToggle_Click"  Padding="8,4"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <!-- Drag strip -->
+                <Border x:Name="DragHandle" Height="60" VerticalAlignment="Top"
                         Background="Transparent" Cursor="SizeAll"
                         MouseLeftButtonDown="DragHandle_MouseLeftButtonDown"/>
 
-                <!-- Resize grip (floating mode only) -->
-                <Thumb x:Name="ResizeGrip" Grid.Row="2"
+                <!-- Resize grip (floating only) -->
+                <Thumb x:Name="ResizeGrip"
                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
                        Width="14" Height="14" Cursor="SizeNWSE"
-                       DragDelta="ResizeGrip_DragDelta" Visibility="Collapsed" Opacity="0.4">
+                       DragDelta="ResizeGrip_DragDelta" Visibility="Collapsed" Opacity="0.35">
                     <Thumb.Template>
                         <ControlTemplate>
                             <Canvas Width="14" Height="14">
-                                <Line X1="12" Y1="3" X2="3" Y2="12" Stroke="#888" StrokeThickness="1"/>
-                                <Line X1="12" Y1="7" X2="7" Y2="12" Stroke="#888" StrokeThickness="1"/>
-                                <Line X1="12" Y1="11" X2="11" Y2="12" Stroke="#888" StrokeThickness="1"/>
+                                <Line X1="12" Y1="3" X2="3" Y2="12" Stroke="#55FFFFFF" StrokeThickness="1.2"/>
+                                <Line X1="12" Y1="7" X2="7" Y2="12" Stroke="#55FFFFFF" StrokeThickness="1.2"/>
                             </Canvas>
                         </ControlTemplate>
                     </Thumb.Template>
@@ -217,33 +300,37 @@
             </Grid>
         </Border>
 
-        <!-- ====== COUNTDOWN OVERLAY ====== -->
-        <!-- Sits above everything; fades out after countdown completes -->
+        <!-- COUNTDOWN OVERLAY -->
         <Border x:Name="CountdownOverlay"
-                Background="#000000"
-                CornerRadius="0,0,18,18"
-                IsHitTestVisible="True">
+                CornerRadius="0,0,28,28"
+                ClipToBounds="True">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#F0111113" Offset="0"/>
+                    <GradientStop Color="#FF050508" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <Grid>
-                <!-- Countdown number -->
+                <TextBlock Text="get ready..."
+                           FontSize="11" Foreground="#44FFFFFF"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Margin="0,-52,0,0"
+                           FontFamily="Segoe UI"/>
                 <TextBlock x:Name="CountdownText"
                            Text="3"
-                           FontSize="56"
-                           FontWeight="Bold"
+                           FontSize="58"
+                           FontWeight="Thin"
                            Foreground="White"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
-                           FontFamily="Segoe UI Variable Display, Segoe UI"/>
-
-                <!-- Small "Get ready..." label above the number -->
-                <TextBlock Text="Get ready..."
-                           FontSize="11"
-                           Foreground="#666"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Margin="0,-60,0,0"
-                           FontFamily="Segoe UI"/>
+                           FontFamily="Segoe UI Variable Display, Segoe UI">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="White" BlurRadius="20" ShadowDepth="0" Opacity="0.15"/>
+                    </TextBlock.Effect>
+                </TextBlock>
             </Grid>
         </Border>
+
     </Grid>
 </Window>
-

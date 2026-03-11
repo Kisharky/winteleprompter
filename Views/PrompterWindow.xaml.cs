@@ -313,12 +313,11 @@ public partial class PrompterWindow : Window
         {
             this.Width = NotchWidth;
             this.Height = NotchHeight;
-            MainBorder.CornerRadius = new CornerRadius(0, 0, 18, 18);
-            MainBorder.Background = new SolidColorBrush(Colors.Black);
+            MainBorder.CornerRadius = new CornerRadius(0, 0, 28, 28);
+            CountdownOverlay.CornerRadius = new CornerRadius(0, 0, 28, 28);
             ScriptText.FontSize = NotchFontSize;
-            ScriptText.LineHeight = 30;
+            ScriptText.LineHeight = 31;
 
-            // Center top of primary screen
             var screen = SystemParameters.PrimaryScreenWidth;
             this.Left = (screen - this.Width) / 2;
             this.Top = 0;
@@ -329,13 +328,12 @@ public partial class PrompterWindow : Window
         }
         else
         {
-            // Floating: remember saved size or default
             this.Width = Math.Max(_settings.PrompterWidth, 500);
             this.Height = Math.Max(_settings.PrompterHeight, 280);
-            MainBorder.CornerRadius = new CornerRadius(14);
-            MainBorder.Background = new SolidColorBrush(Color.FromArgb(0xD0, 0x10, 0x10, 0x12));
+            MainBorder.CornerRadius = new CornerRadius(24);
+            CountdownOverlay.CornerRadius = new CornerRadius(24);
             ScriptText.FontSize = _settings.FontSize;
-            ScriptText.LineHeight = _settings.FontSize * 1.35;
+            ScriptText.LineHeight = _settings.FontSize * 1.4;
 
             var wa = SystemParameters.WorkArea;
             this.Left = (wa.Width - this.Width) / 2;
@@ -377,8 +375,8 @@ public partial class PrompterWindow : Window
 
     private void UpdateSpeedButtonStates()
     {
-        var active = (Style)FindResource("ActiveSpeedBtn");
-        var normal = (Style)FindResource("OverlayBtn");
+        var active = (Style)FindResource("ActivePillBtn");
+        var normal = (Style)FindResource("PillBtn");
         Speed1.Style = _currentSpeedMultiplier == 1.0 ? active : normal;
         Speed15.Style = _currentSpeedMultiplier == 1.5 ? active : normal;
         Speed2.Style = _currentSpeedMultiplier == 2.0 ? active : normal;
@@ -437,22 +435,27 @@ public partial class PrompterWindow : Window
                 TogglePause();
                 e.Handled = true;
                 break;
+
+            // ↑↓ : Ctrl = speed control, plain = scroll 40px
             case Key.Up:
-                IncreaseSpeed();
+                if (Keyboard.Modifiers == ModifierKeys.Control) IncreaseSpeed();
+                else { _scrollPosition = Math.Max(0, _scrollPosition - 40); TextScroller.ScrollToVerticalOffset(_scrollPosition); }
                 e.Handled = true;
                 break;
             case Key.Down:
-                DecreaseSpeed();
+                if (Keyboard.Modifiers == ModifierKeys.Control) DecreaseSpeed();
+                else { _scrollPosition = Math.Min(TextScroller.ScrollableHeight, _scrollPosition + 40); TextScroller.ScrollToVerticalOffset(_scrollPosition); }
                 e.Handled = true;
                 break;
+
             case Key.OemPlus when Keyboard.Modifiers == ModifierKeys.Control:
             case Key.Add when Keyboard.Modifiers == ModifierKeys.Control:
-                if (ScriptText.FontSize < 96) { ScriptText.FontSize += 2; ScriptText.LineHeight = ScriptText.FontSize * 1.35; }
+                if (ScriptText.FontSize < 96) { ScriptText.FontSize += 2; ScriptText.LineHeight = ScriptText.FontSize * 1.4; }
                 e.Handled = true;
                 break;
             case Key.OemMinus when Keyboard.Modifiers == ModifierKeys.Control:
             case Key.Subtract when Keyboard.Modifiers == ModifierKeys.Control:
-                if (ScriptText.FontSize > 12) { ScriptText.FontSize -= 2; ScriptText.LineHeight = ScriptText.FontSize * 1.35; }
+                if (ScriptText.FontSize > 12) { ScriptText.FontSize -= 2; ScriptText.LineHeight = ScriptText.FontSize * 1.4; }
                 e.Handled = true;
                 break;
             case Key.Escape:

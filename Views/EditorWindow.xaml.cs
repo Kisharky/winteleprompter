@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using MoodyClone.Models;
 using MoodyClone.Services;
@@ -18,31 +19,28 @@ public partial class EditorWindow : Window
         InitializeComponent();
         _settings = AppSettings.Load();
 
-        // Set up autosave timer (1 second debounce)
         _autosaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _autosaveTimer.Tick += AutosaveTimer_Tick;
 
-        // Load last script
         var lastScript = _scriptManager.LoadLastScript();
         ScriptEditor.Text = lastScript.Content;
         ScriptEditor.FontSize = _settings.EditorFontSize;
-        FontSizeLabel.Text = _settings.EditorFontSize.ToString();
 
         UpdateCounts();
+        UpdatePlaceholder();
     }
 
     private void ScriptEditor_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
         _isDirty = true;
-        AutosaveIndicator.Text = "Unsaved";
-        AutosaveIndicator.Foreground = new System.Windows.Media.SolidColorBrush(
-            System.Windows.Media.Color.FromRgb(0xFF, 0xCC, 0x00));
+        SaveIndicator.Text = "Unsaved";
+        SaveIndicator.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xCC, 0x00));
 
-        // Reset and restart the debounce timer
         _autosaveTimer.Stop();
         _autosaveTimer.Start();
 
         UpdateCounts();
+        UpdatePlaceholder();
     }
 
     private void AutosaveTimer_Tick(object? sender, EventArgs e)
@@ -52,19 +50,23 @@ public partial class EditorWindow : Window
         {
             _scriptManager.AutoSave(ScriptEditor.Text);
             _isDirty = false;
-            AutosaveIndicator.Text = "Saved";
-            AutosaveIndicator.Foreground = new System.Windows.Media.SolidColorBrush(
-                System.Windows.Media.Color.FromRgb(0x66, 0x66, 0x66));
+            SaveIndicator.Text = "Saved";
+            SaveIndicator.Foreground = new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF));
         }
     }
 
     private void UpdateCounts()
     {
         var text = ScriptEditor.Text ?? "";
-        int words = string.IsNullOrWhiteSpace(text) ? 0 :
-            Regex.Split(text.Trim(), @"\s+").Length;
-        WordCount.Text = $"{words} word{(words != 1 ? "s" : "")}";
-        CharCount.Text = $"{text.Length} character{(text.Length != 1 ? "s" : "")}";
+        int words = string.IsNullOrWhiteSpace(text) ? 0 : Regex.Split(text.Trim(), @"\s+").Length;
+        int chars = text.Length;
+        WordCount.Text = $"{words} word{(words != 1 ? "s" : "")} · {chars} character{(chars != 1 ? "s" : "")}";
+    }
+
+    private void UpdatePlaceholder()
+    {
+        PlaceholderText.Visibility = string.IsNullOrEmpty(ScriptEditor.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FontIncrease_Click(object sender, RoutedEventArgs e)
@@ -72,7 +74,6 @@ public partial class EditorWindow : Window
         if (ScriptEditor.FontSize < 48)
         {
             ScriptEditor.FontSize += 2;
-            FontSizeLabel.Text = ScriptEditor.FontSize.ToString();
             _settings.EditorFontSize = (int)ScriptEditor.FontSize;
             _settings.Save();
         }
@@ -83,7 +84,6 @@ public partial class EditorWindow : Window
         if (ScriptEditor.FontSize > 12)
         {
             ScriptEditor.FontSize -= 2;
-            FontSizeLabel.Text = ScriptEditor.FontSize.ToString();
             _settings.EditorFontSize = (int)ScriptEditor.FontSize;
             _settings.Save();
         }
@@ -91,18 +91,17 @@ public partial class EditorWindow : Window
 
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        var settingsWindow = new SettingsWindow(_settings);
-        settingsWindow.Owner = this;
-        if (settingsWindow.ShowDialog() == true)
+        var win = new SettingsWindow(_settings);
+        win.Owner = this;
+        if (win.ShowDialog() == true)
         {
-            _settings = settingsWindow.Settings;
+            _settings = win.Settings;
             _settings.Save();
         }
     }
 
     private void StartPrompter_Click(object sender, RoutedEventArgs e)
     {
-        // Force autosave
         _autosaveTimer.Stop();
         _scriptManager.AutoSave(ScriptEditor.Text);
         _isDirty = false;
@@ -115,17 +114,13 @@ public partial class EditorWindow : Window
             return;
         }
 
-        // Hide editor
         this.Hide();
 
-        // Open prompter
         var prompter = new PrompterWindow(text, _settings);
         prompter.Closed += (_, _) =>
         {
-            // Restore editor when prompter closes
             this.Show();
             this.Activate();
-            // Reload settings in case they changed
             _settings = AppSettings.Load();
         };
         prompter.Show();
