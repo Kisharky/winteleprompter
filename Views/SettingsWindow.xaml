@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
-        Width="420" Height="480"
+        Width="440" Height="580"
         WindowStartupLocation="CenterOwner"
         Background="#1C1C1E"
         Foreground="White"
@@ -11,10 +11,11 @@
         WindowStyle="SingleBorderWindow">
 
     <Window.Resources>
-        <Style x:Key="SettingsLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="#AAAAAA"/>
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#777"/>
             <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style x:Key="SettingsCombo" TargetType="ComboBox">
             <Setter Property="Background" Value="#2C2C2E"/>
@@ -24,7 +25,7 @@
             <Setter Property="BorderBrush" Value="#3A3A3C"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
-        <Style x:Key="SettingsRadio" TargetType="RadioButton">
+        <Style x:Key="Radio" TargetType="RadioButton">
             <Setter Property="Foreground" Value="#E0E0E0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Margin" Value="0,0,16,0"/>
@@ -40,90 +41,92 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
                                 CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#34E060"/>
+                                <Setter TargetName="b" Property="Background" Value="#34E060"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-    </Window.Resources>
-
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Title -->
-        <TextBlock Grid.Row="0" Text="⚙ Settings" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
-
-        <!-- Microphone -->
-        <StackPanel Grid.Row="2">
-            <TextBlock Text="MICROPHONE" Style="{StaticResource SettingsLabel}"/>
-            <ComboBox x:Name="MicSelector" Style="{StaticResource SettingsCombo}"/>
-        </StackPanel>
-
-        <!-- Text Color -->
-        <StackPanel Grid.Row="4">
-            <TextBlock Text="TEXT COLOR" Style="{StaticResource SettingsLabel}"/>
-            <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="ColorWhite" Content="White" Style="{StaticResource SettingsRadio}" IsChecked="True"/>
-                <RadioButton x:Name="ColorYellow" Content="Yellow" Style="{StaticResource SettingsRadio}"/>
-                <RadioButton x:Name="ColorGreen" Content="Green" Style="{StaticResource SettingsRadio}"/>
-            </StackPanel>
-        </StackPanel>
-
-        <!-- Prompter Mode -->
-        <StackPanel Grid.Row="6">
-            <TextBlock Text="PROMPTER MODE" Style="{StaticResource SettingsLabel}"/>
-            <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="ModeNotch" Content="📌 Notch" Style="{StaticResource SettingsRadio}" IsChecked="True"/>
-                <RadioButton x:Name="ModeFloating" Content="🪟 Floating" Style="{StaticResource SettingsRadio}"/>
-            </StackPanel>
-        </StackPanel>
-
-        <!-- Font Size -->
-        <StackPanel Grid.Row="8">
-            <TextBlock Text="PROMPTER FONT SIZE" Style="{StaticResource SettingsLabel}"/>
-            <StackPanel Orientation="Horizontal">
-                <Slider x:Name="FontSizeSlider" Minimum="24" Maximum="96" Value="48"
-                        Width="240" VerticalAlignment="Center"
-                        TickFrequency="4" IsSnapToTickEnabled="True"/>
-                <TextBlock x:Name="FontSizeDisplay" Text="48" FontSize="13" Foreground="#CCC"
-                           VerticalAlignment="Center" Margin="12,0,0,0"/>
-            </StackPanel>
-        </StackPanel>
-
-        <!-- Save -->
-        <StackPanel Grid.Row="10" HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button Content="Cancel" Padding="16,8" Margin="0,0,8,0" Click="Cancel_Click"
-                    Background="#2C2C2E" Foreground="#E0E0E0" BorderThickness="0" Cursor="Hand">
-                <Button.Template>
+        <Style x:Key="CancelBtn" TargetType="Button">
+            <Setter Property="Background" Value="#2C2C2E"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
-                </Button.Template>
-            </Button>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="24" VerticalAlignment="Top">
+        <!-- Title -->
+        <TextBlock Text="⚙ Settings" FontSize="20" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,24"/>
+
+        <!-- MICROPHONE -->
+        <TextBlock Text="MICROPHONE" Style="{StaticResource SectionLabel}"/>
+        <ComboBox x:Name="MicSelector" Style="{StaticResource SettingsCombo}" Margin="0,0,0,20"/>
+
+        <!-- TEXT COLOR -->
+        <TextBlock Text="TEXT COLOR" Style="{StaticResource SectionLabel}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+            <RadioButton x:Name="ColorWhite" Content="White" Style="{StaticResource Radio}" IsChecked="True"/>
+            <RadioButton x:Name="ColorYellow" Content="Yellow" Style="{StaticResource Radio}"/>
+            <RadioButton x:Name="ColorGreen" Content="Green" Style="{StaticResource Radio}"/>
+        </StackPanel>
+
+        <!-- TEXT ALIGNMENT -->
+        <TextBlock Text="TEXT ALIGNMENT" Style="{StaticResource SectionLabel}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+            <RadioButton x:Name="AlignLeft" Content="◀ Left" Style="{StaticResource Radio}"/>
+            <RadioButton x:Name="AlignCenter" Content="▶◀ Center" Style="{StaticResource Radio}" IsChecked="True"/>
+            <RadioButton x:Name="AlignRight" Content="▶ Right" Style="{StaticResource Radio}"/>
+        </StackPanel>
+
+        <!-- PROMPTER MODE -->
+        <TextBlock Text="PROMPTER MODE" Style="{StaticResource SectionLabel}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+            <RadioButton x:Name="ModeNotch" Content="📌 Notch" Style="{StaticResource Radio}" IsChecked="True"/>
+            <RadioButton x:Name="ModeFloating" Content="🪟 Floating" Style="{StaticResource Radio}"/>
+        </StackPanel>
+
+        <!-- COUNTDOWN TIMER -->
+        <TextBlock Text="COUNTDOWN BEFORE START" Style="{StaticResource SectionLabel}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+            <RadioButton x:Name="Countdown0" Content="Off" Style="{StaticResource Radio}"/>
+            <RadioButton x:Name="Countdown3" Content="3 sec" Style="{StaticResource Radio}" IsChecked="True"/>
+            <RadioButton x:Name="Countdown5" Content="5 sec" Style="{StaticResource Radio}"/>
+        </StackPanel>
+
+        <!-- FONT SIZE -->
+        <TextBlock Text="PROMPTER FONT SIZE" Style="{StaticResource SectionLabel}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,28">
+            <Slider x:Name="FontSizeSlider" Minimum="14" Maximum="72" Value="22"
+                    Width="260" VerticalAlignment="Center"
+                    TickFrequency="2" IsSnapToTickEnabled="True"/>
+            <TextBlock x:Name="FontSizeDisplay" Text="22" FontSize="13" Foreground="#CCC"
+                       VerticalAlignment="Center" Margin="12,0,0,0" Width="30"/>
+        </StackPanel>
+
+        <!-- BUTTONS -->
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Content="Cancel" Style="{StaticResource CancelBtn}" Click="Cancel_Click"/>
             <Button Content="Save" Style="{StaticResource SaveBtn}" Click="Save_Click"/>
         </StackPanel>
-    </Grid>
+    </StackPanel>
 </Window>

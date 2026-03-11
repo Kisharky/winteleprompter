@@ -61,6 +61,14 @@ public partial class PrompterWindow : Window
 
         // Apply text color
         ApplyTextColor(settings.TextColor);
+
+        // Apply text alignment
+        ScriptText.TextAlignment = settings.TextAlignment switch
+        {
+            TextAlignmentOption.Left => TextAlignment.Left,
+            TextAlignmentOption.Right => TextAlignment.Right,
+            _ => TextAlignment.Center
+        };
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -81,6 +89,54 @@ public partial class PrompterWindow : Window
         CompositionTarget.Rendering += OnRendering;
 
         this.Focus();
+
+        // Start countdown, then begin scrolling
+        StartCountdown();
+    }
+
+    // ===================== COUNTDOWN TIMER =====================
+
+    private async void StartCountdown()
+    {
+        // Pause scrolling during countdown
+        _isPaused = true;
+
+        for (int i = 3; i >= 1; i--)
+        {
+            CountdownText.Text = i.ToString();
+
+            // Pulse animation on number change
+            var scaleIn = new DoubleAnimation(1.4, 1.0, TimeSpan.FromMilliseconds(500));
+            scaleIn.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
+            var st = new ScaleTransform(1.4, 1.4, 0.5, 0.5);
+            CountdownText.RenderTransform = st;
+            CountdownText.RenderTransformOrigin = new Point(0.5, 0.5);
+            st.BeginAnimation(ScaleTransform.ScaleXProperty, scaleIn);
+            st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.4, 1.0, TimeSpan.FromMilliseconds(500))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            });
+
+            await Task.Delay(900);
+        }
+
+        // Show GO!
+        CountdownText.Text = "GO!";
+        CountdownText.Foreground = new SolidColorBrush(Color.FromRgb(0x30, 0xD1, 0x58));
+
+        await Task.Delay(500);
+
+        // Fade out overlay
+        var fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(400));
+        fadeOut.Completed += (_, _) =>
+        {
+            CountdownOverlay.Visibility = Visibility.Collapsed;
+            CountdownOverlay.IsHitTestVisible = false;
+        };
+        CountdownOverlay.BeginAnimation(OpacityProperty, fadeOut);
+
+        // Resume scrolling
+        _isPaused = false;
     }
 
     // ===================== SCREEN CAPTURE =====================

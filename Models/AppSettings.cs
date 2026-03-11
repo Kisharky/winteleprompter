@@ -24,6 +24,13 @@ public enum SpeedStep
     x3
 }
 
+public enum TextAlignmentOption
+{
+    Left,
+    Center,
+    Right
+}
+
 public class AppSettings
 {
     public int FontSize { get; set; } = 48;
@@ -34,6 +41,8 @@ public class AppSettings
     public int EditorFontSize { get; set; } = 22;
     public double PrompterWidth { get; set; } = 700;
     public double PrompterHeight { get; set; } = 300;
+    public TextAlignmentOption TextAlignment { get; set; } = TextAlignmentOption.Center;
+    public int CountdownSeconds { get; set; } = 3;
 
     private static readonly string SettingsDir =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MoodyClone");

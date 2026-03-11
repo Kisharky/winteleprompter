@@ -216,5 +216,34 @@
                 </Thumb>
             </Grid>
         </Border>
+
+        <!-- ====== COUNTDOWN OVERLAY ====== -->
+        <!-- Sits above everything; fades out after countdown completes -->
+        <Border x:Name="CountdownOverlay"
+                Background="#000000"
+                CornerRadius="0,0,18,18"
+                IsHitTestVisible="True">
+            <Grid>
+                <!-- Countdown number -->
+                <TextBlock x:Name="CountdownText"
+                           Text="3"
+                           FontSize="56"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontFamily="Segoe UI Variable Display, Segoe UI"/>
+
+                <!-- Small "Get ready..." label above the number -->
+                <TextBlock Text="Get ready..."
+                           FontSize="11"
+                           Foreground="#666"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Margin="0,-60,0,0"
+                           FontFamily="Segoe UI"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
+
